@@ -3,13 +3,14 @@ from tkinter import ttk
 from viewmodels.tasks_viewmodel import TasksViewModel
 from models.task import Task
 
+
 class TasksView(ttk.Frame):
     def __init__(self, root, view_model: TasksViewModel):
         super().__init__(root)
         self.view_model = view_model
 
         self.configure(padding=10)
-        
+
         self.create_widgets()
         self.update_list()
 
@@ -27,12 +28,16 @@ class TasksView(ttk.Frame):
 
         # Frame for tasks list with scrollbar
         self.tasks_frame = ttk.Frame(self)
-        self.tasks_frame.grid(row=2, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
+        self.tasks_frame.grid(
+            row=2, column=0, columnspan=4, padx=5, pady=5, sticky="nsew"
+        )
 
         self.canvas = tk.Canvas(self.tasks_frame)
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.scrollbar = ttk.Scrollbar(self.tasks_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollbar = ttk.Scrollbar(
+            self.tasks_frame, orient="vertical", command=self.canvas.yview
+        )
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.canvas.config(yscrollcommand=self.scrollbar.set)
@@ -40,14 +45,16 @@ class TasksView(ttk.Frame):
         self.task_frame = ttk.Frame(self.canvas)
         self.canvas.create_window((0, 0), window=self.task_frame, anchor="nw")
 
-        self.task_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.task_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
+        )
 
         # Bind double-click event to checkbuttons
         self.task_frame.bind("<Double-1>", self.on_double_click)
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=1)
-
 
     def on_double_click(self, event):
         widget = event.widget
@@ -94,30 +101,54 @@ class TasksView(ttk.Frame):
 
         for index, task in enumerate(self.view_model.tasks):
             var = tk.BooleanVar(value=task.is_done)
-            checkbutton = ttk.Checkbutton(self.tasks_frame, text="", variable=var, onvalue=True, offvalue=False,  
-            command=lambda i=index: self.view_model.toggle_task_completion(self.view_model.tasks[i]))
+            checkbutton = ttk.Checkbutton(
+                self.tasks_frame,
+                text="",
+                variable=var,
+                onvalue=True,
+                offvalue=False,
+                command=lambda i=index: self.view_model.toggle_task_completion(
+                    self.view_model.tasks[i]
+                ),
+            )
 
             if task.is_done:
-                checkbutton.state(['selected'])
+                checkbutton.state(["selected"])
 
-            
             task_entry = ttk.Entry(self.tasks_frame, width=40)
             task_entry.insert(0, task.description)
             task_entry.grid_remove()
-            task_entry.bind('<Return>', lambda e, t=task, ent=task_entry, lbl=None: self.on_entry_return(t, ent, lbl))
-            
-            task_label = ttk.Label(self.tasks_frame, text=task.description)
-            task_label.bind('<Double-1>', lambda e, entry=task_entry, label=task_label, t=task: self.on_label_double_click(entry, label, t))
-            task_label.grid(row=index, column=1, sticky="w")
-            
-            checkbutton.grid(row=index, column=0, sticky="w")
+            task_entry.bind(
+                "<Return>",
+                lambda e, t=task, ent=task_entry, lbl=None: self.on_entry_return(
+                    t, ent, lbl
+                ),
+            )
 
-            delete_button = ttk.Button(self.tasks_frame, text="X", 
-                command=lambda i=index: self.delete_task(i))
-            delete_button.grid(row=index, column=3, padx=5)
+            task_label = ttk.Label(self.tasks_frame, text=task.description)
+            task_label.bind(
+                "<Double-1>",
+                lambda e, entry=task_entry, label=task_label, t=task: self.on_label_double_click(
+                    entry, label, t
+                ),
+            )
+
+            # Grid widgets
+            checkbutton.grid(row=index, column=0, sticky="w")
+            task_label.grid(row=index, column=1, sticky="ew")
+            task_entry.grid(row=index, column=1, sticky="ew")
+            task_entry.grid_remove()
+            delete_button = ttk.Button(
+                self.tasks_frame, text="X", command=lambda i=index: self.delete_task(i)
+            )
+            delete_button.grid(row=index, column=2, padx=5, sticky="e")
+
+            # Configure column weights to make task_label and task_entry expand
+            self.tasks_frame.grid_columnconfigure(1, weight=1)
+            self.tasks_frame.grid_columnconfigure(2, weight=0)
 
     def on_label_double_click(self, entry: ttk.Entry, label: ttk.Label, task: Task):
-        row = label.grid_info()['row']
+        row = label.grid_info()["row"]
         label.grid_remove()
         entry.grid(row=row, column=1, sticky="w")
 
@@ -126,9 +157,9 @@ class TasksView(ttk.Frame):
         self.view_model.edit_task(task, new_text)
         entry.grid_remove()
         self.update_list()
-    
+
     def get_selected_task_index(self):
         for index, widget in enumerate(self.tasks_frame.winfo_children()):
-            if widget.winfo_class() == 'TCheckbutton' and widget.instate(['selected']):
+            if widget.winfo_class() == "TCheckbutton" and widget.instate(["selected"]):
                 return index
         return None
