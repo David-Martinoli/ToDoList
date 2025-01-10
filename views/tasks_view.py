@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, PhotoImage
 from viewmodels.tasks_viewmodel import TasksViewModel
 from models.task import Task
 
@@ -8,6 +8,9 @@ class TasksView(ttk.Frame):
     def __init__(self, root, view_model: TasksViewModel):
         super().__init__(root)
         self.view_model = view_model
+
+        self.delete_icon = PhotoImage(file="resources/delete_icon.png")
+        self.delete_icon = self.delete_icon.subsample(3, 3)
 
         self.configure(padding=10)
 
@@ -139,7 +142,9 @@ class TasksView(ttk.Frame):
             task_entry.grid(row=index, column=1, sticky="ew")
             task_entry.grid_remove()
             delete_button = ttk.Button(
-                self.tasks_frame, text="X", command=lambda i=index: self.delete_task(i)
+                self.tasks_frame,
+                image=self.delete_icon,
+                command=lambda i=index: self.delete_task(i),
             )
             delete_button.grid(row=index, column=2, padx=5, sticky="e")
 
