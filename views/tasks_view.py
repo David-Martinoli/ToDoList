@@ -1,10 +1,14 @@
 import tkinter as tk
-from tkinter import ttk, PhotoImage
+from tkinter import NORMAL, ttk, PhotoImage
 from viewmodels.tasks_viewmodel import TasksViewModel
 from models.task import Task
 
 
 class TasksView(ttk.Frame):
+    PLACEHOLDER_TEXT = "Enter here the task description and hit enter to add."
+    PLACEHOLDER_COLOR = "gray"
+    DEFAULT_ENTRY_TEXT_COLOR = "black"
+
     def __init__(self, root, view_model: TasksViewModel):
         super().__init__(root)
         self.view_model = view_model
@@ -18,16 +22,23 @@ class TasksView(ttk.Frame):
         self.update_list()
 
     def create_widgets(self):
-        # Entry for task description
-        self.entry_label = ttk.Label(self, text="Task Description:")
-        self.entry_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-        self.entry = ttk.Entry(self, textvariable=self.view_model.description, width=40)
+        # Entry Style
+        self.style = ttk.Style()
+        self.style.configure("Placeholder.TEntry", foreground=self.PLACEHOLDER_COLOR)
+        self.style.configure("Normal.TEntry", foreground=self.DEFAULT_ENTRY_TEXT_COLOR)
+        # Entry with placeholder
+        self.entry = ttk.Entry(
+            self,
+            textvariable=self.view_model.description,
+            width=50,
+            style="Placeholder.TEntry",
+        )
+        self.entry.insert(0, self.PLACEHOLDER_TEXT)
+        self.entry.bind("<FocusIn>", self._on_entry_focus_in)
+        self.entry.bind("<FocusOut>", self._on_entry_focus_out)
+        self.entry.bind("<Return>", lambda e: self.add_task())
         self.entry.grid(row=0, column=1, padx=5, pady=5, columnspan=3, sticky="ew")
-
-        # Add task button
-        self.add_button = ttk.Button(self, text="Add Task", command=self.add_task)
-        self.add_button.grid(row=1, column=0, padx=5, pady=5, columnspan=4, sticky="ew")
 
         # Frame for tasks list with scrollbar
         self.tasks_frame = ttk.Frame(self)
@@ -54,19 +65,35 @@ class TasksView(ttk.Frame):
         )
 
         # Bind double-click event to checkbuttons
-        self.task_frame.bind("<Double-1>", self.on_double_click)
+        self.task_frame.bind("<Double-1>", self._on_task_double_click)
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=1)
 
-    def on_double_click(self, event):
+    def _on_entry_focus_in(self, event):
+        if self.entry.get() == self.PLACEHOLDER_TEXT:
+            self.entry.delete(0, "end")
+            self.entry.configure(style="Normal.TEntry")
+
+    def _on_entry_focus_out(self, event):
+        if not self.entry.get():
+            self.entry.insert(0, self.PLACEHOLDER_TEXT)
+            self.entry.configure(style="Placeholder.TEntry")
+
+    def _on_task_double_click(self, event):
         widget = event.widget
         if isinstance(widget, tk.Checkbutton):
             widget.invoke()
 
     def add_task(self):
-        self.view_model.add_task()
-        self.update_list()
+        description = self.view_model.description.get()
+        if description != self.PLACEHOLDER_TEXT:
+            self.view_model.add_task()
+            self.entry.delete(0, "end")
+            self.entry.insert(0, self.PLACEHOLDER_TEXT)
+            self.entry.configure(style="Placeholder.TEntry")
+            self.focus_set()
+            self.update_list()
 
     def edit_task(self, index=None):
         if index is None:
@@ -103,20 +130,21 @@ class TasksView(ttk.Frame):
             widget.destroy()
 
         for index, task in enumerate(self.view_model.tasks):
-            var = tk.BooleanVar(value=task.is_done)
+            # var = tk.BooleanVar(value=task.is_done)
+            print(f"Task {index}: is_done = {task.is_done}")  # Debug print
+
             checkbutton = ttk.Checkbutton(
                 self.tasks_frame,
                 text="",
-                variable=var,
-                onvalue=True,
-                offvalue=False,
                 command=lambda i=index: self.view_model.toggle_task_completion(
                     self.view_model.tasks[i]
                 ),
             )
-
+            # Force initial state
             if task.is_done:
                 checkbutton.state(["selected"])
+            else:
+                checkbutton.state(["!selected"])
 
             task_entry = ttk.Entry(self.tasks_frame, width=40)
             task_entry.insert(0, task.description)
