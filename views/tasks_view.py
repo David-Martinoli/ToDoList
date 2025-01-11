@@ -84,7 +84,7 @@ class TasksView(ttk.Frame):
         if index is None:
             selected_index = self.get_selected_task_index()
         else:
-            selected_index is index
+            selected_index = index
 
         if selected_index is not None:
             task = self.view_model.tasks[selected_index]
