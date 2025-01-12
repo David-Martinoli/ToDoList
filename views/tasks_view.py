@@ -5,7 +5,7 @@ from models.task import Task
 
 
 class TasksView(ttk.Frame):
-    PLACEHOLDER_TEXT = "Enter here the task description and hit enter to add."
+    PLACEHOLDER_TEXT = "Task description"
     PLACEHOLDER_COLOR = "gray"
     DEFAULT_ENTRY_TEXT_COLOR = "black"
 
@@ -33,6 +33,7 @@ class TasksView(ttk.Frame):
             textvariable=self.view_model.description,
             width=50,
             style="Placeholder.TEntry",
+            justify="center",
         )
         self.entry.insert(0, self.PLACEHOLDER_TEXT)
         self.entry.bind("<FocusIn>", self._on_entry_focus_in)
@@ -141,8 +142,9 @@ class TasksView(ttk.Frame):
                 ["!alternate"] + (["selected"] if task.is_done else ["!selected"])
             )
 
-            task_entry = ttk.Entry(self.tasks_frame, width=40)
+            task_entry = ttk.Entry(self.tasks_frame, width=40, justify="center")
             task_entry.insert(0, task.description)
+            task_entry.grid(row=index, column=1, padx=5, pady=2, sticky="nsew")
             task_entry.grid_remove()
             task_entry.bind(
                 "<Return>",
@@ -151,7 +153,10 @@ class TasksView(ttk.Frame):
                 ),
             )
 
-            task_label = ttk.Label(self.tasks_frame, text=task.description)
+            task_label = ttk.Label(
+                self.tasks_frame, text=task.description, anchor="center"
+            )
+            task_label.grid(row=index, column=1, padx=5, pady=2, sticky="nsew")
             task_label.bind(
                 "<Double-1>",
                 lambda e, entry=task_entry, label=task_label, t=task: self.on_label_double_click(
