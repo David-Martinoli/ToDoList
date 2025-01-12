@@ -130,21 +130,16 @@ class TasksView(ttk.Frame):
             widget.destroy()
 
         for index, task in enumerate(self.view_model.tasks):
-            # var = tk.BooleanVar(value=task.is_done)
-            print(f"Task {index}: is_done = {task.is_done}")  # Debug print
-
             checkbutton = ttk.Checkbutton(
                 self.tasks_frame,
-                text="",
                 command=lambda i=index: self.view_model.toggle_task_completion(
                     self.view_model.tasks[i]
                 ),
             )
-            # Force initial state
-            if task.is_done:
-                checkbutton.state(["selected"])
-            else:
-                checkbutton.state(["!selected"])
+
+            checkbutton.state(
+                ["!alternate"] + (["selected"] if task.is_done else ["!selected"])
+            )
 
             task_entry = ttk.Entry(self.tasks_frame, width=40)
             task_entry.insert(0, task.description)
