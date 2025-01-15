@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import NORMAL, ttk, PhotoImage
+from tkinter import font
 from viewmodels.tasks_viewmodel import TasksViewModel
 from models.task import Task
 
@@ -119,24 +120,28 @@ class TasksView(ttk.Frame):
             self.view_model.delete_task(task)
             self.update_list()
 
-    def complete_task(self):
-        selected_index = self.get_selected_task_index()
-        if selected_index is not None:
-            task = self.view_model.tasks[selected_index]
-            self.view_model.toggle_task_completion(task)
-            self.update_list()
 
     def update_list(self):
         for widget in self.tasks_frame.winfo_children():
             widget.destroy()
 
         for index, task in enumerate(self.view_model.tasks):
-            checkbutton = ttk.Checkbutton(
-                self.tasks_frame,
-                command=lambda i=index: self.view_model.toggle_task_completion(
-                    self.view_model.tasks[i]
-                ),
+            # checkbutton = ttk.Checkbutton(
+            #     self.tasks_frame,
+            #     command=lambda i=index: self.view_model.toggle_task_completion(
+            #         self.view_model.tasks[i]
+            #     ),
+            # )
+            checkbutton = ttk.Checkbutton(self.tasks_frame)
+            
+            task_label = ttk.Label(
+                self.tasks_frame, 
+                text=task.description, 
+                anchor="center"
             )
+
+            checkbutton.config( command=lambda i=index, cb=checkbutton, lbl=task_label: self.update_task_status(i, cb, lbl))
+
 
             checkbutton.state(
                 ["!alternate"] + (["selected"] if task.is_done else ["!selected"])
@@ -153,9 +158,9 @@ class TasksView(ttk.Frame):
                 ),
             )
 
-            task_label = ttk.Label(
-                self.tasks_frame, text=task.description, anchor="center"
-            )
+
+            self.set_label_style(task_label, task.is_done)
+
             task_label.grid(row=index, column=1, padx=5, pady=2, sticky="nsew")
             task_label.bind(
                 "<Double-1>",
@@ -179,6 +184,26 @@ class TasksView(ttk.Frame):
             # Configure column weights to make task_label and task_entry expand
             self.tasks_frame.grid_columnconfigure(1, weight=1)
             self.tasks_frame.grid_columnconfigure(2, weight=0)
+
+    def update_task_status(self, index, checkbutton:ttk.Checkbutton, label:ttk.Label):
+        task = self.view_model.tasks[index]
+
+        is_selected = "selected" in checkbutton.state()
+        
+        if is_selected:
+            self.set_label_style(label, True)
+        else:
+            self.set_label_style(label, False)
+
+        self.view_model.toggle_task_completion(task)
+
+
+    def set_label_style(self, label: ttk.Label, is_done:bool):
+        if is_done:
+            label.config(font=("Console", 10, "overstrike"))
+        else:
+            label.config(font=("Console", 10, "normal"))
+
 
     def on_label_double_click(self, entry: ttk.Entry, label: ttk.Label, task: Task):
         row = label.grid_info()["row"]
