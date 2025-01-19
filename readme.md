@@ -1,6 +1,6 @@
 # Tasks App
 
-Tasks App es una aplicación de escritorio para la gestión de tareas, construida utilizando Python, Tkinter y SQLAlchemy.
+Tasks App es una aplicación de escritorio para la gestión de tareas, construida utilizando Python, SQLite, Tkinter y SQLAlchemy.
 
 ## Descripción de Archivos
 
